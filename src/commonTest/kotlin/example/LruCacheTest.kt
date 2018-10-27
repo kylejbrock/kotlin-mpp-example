@@ -9,10 +9,6 @@ import kotlin.test.assertEquals
 
 class StringTask(val cache: LruCache<Int>, val index: Int) : Task<String> {
 
-    init {
-        ensureNeverFrozen()
-    }
-
     override fun execute(): String {
         val sharedItem = cache["shared_item"] ?: 0
         val taskIndex = sharedItem + index
@@ -24,10 +20,6 @@ class StringTask(val cache: LruCache<Int>, val index: Int) : Task<String> {
 }
 
 class AddToCacheTask(val cache: LruCache<Int>, val index: Int) : Task<Int> {
-
-    init {
-        ensureNeverFrozen()
-    }
 
     override fun execute(): Int {
         cache["shared_item_$index"] = index

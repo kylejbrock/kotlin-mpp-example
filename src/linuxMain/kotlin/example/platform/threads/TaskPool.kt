@@ -16,7 +16,7 @@ actual class TaskPool actual constructor(workerCount: Int) {
     private val random = Random(4).apply { ensureNeverFrozen() }
 
     actual fun <T> execute(task: Task<T>): Result<T> {
-        task.freeze()
+        task.freeze() // FAIL: Core Dump unless this is commented out.  But, if you comment it out, it fails because of Immutability.  Confused at how to accomplish this.
         val workerIndex = random.nextInt(0, workers.size)
         val worker = workers[workerIndex]
         val future = worker.execute(TransferMode.SAFE, { task }, {

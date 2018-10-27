@@ -1,6 +1,7 @@
 package example.platform.threads
 
 import example.ExampleException
+import kotlin.reflect.KClass
 
 interface Callback<T> {
 
@@ -16,16 +17,26 @@ expect class ResultFuture<T> {
 
 class ResultException(message: String, val originalError: Throwable) : ExampleException(message)
 
+internal expect class ResultHolder<T>(value: T) { // Holder to ensure value isn't frozen.  The Result shouldn't be in charge of the immutability of the contained object
+
+    actual inline fun <reified T> getValue(): T
+
+}
+
 class Result<T>(private val future: ResultFuture<Pair<T?, Throwable?>>) {
 
     private val _complete = AtomicReference(false)
-    private val _result = AtomicReference<T?>(null)
+    private val _result = AtomicReference<ResultHolder<T>?>(null)
     private val _resultError = AtomicReference<Throwable?>(null)
     private val _callbacks = ThreadSafeList<Callback<T>>()
     private val _lock = Lock()
 
+    @Suppress("UNCHECKED_CAST")
     val value: T?
-        get() = _result.value
+        get() {
+            val r: Any? = _result.value?.getValue()
+            return r as T?
+        }
 
     val error: Throwable?
         get() = _resultError.value
@@ -50,7 +61,8 @@ class Result<T>(private val future: ResultFuture<Pair<T?, Throwable?>>) {
     private fun setResult(result: T?, error: Throwable?) {
         if (complete)
             throw IllegalStateException("Result already set")
-        _result.set(result)
+        if (result != null)
+            _result.set(ResultHolder(result))
         _resultError.set(error)
         _complete.set(true)
         // TODO: Core dumps if this is uncommented
@@ -74,5 +86,4 @@ class Result<T>(private val future: ResultFuture<Pair<T?, Throwable?>>) {
             }
         }
     }
-
 }

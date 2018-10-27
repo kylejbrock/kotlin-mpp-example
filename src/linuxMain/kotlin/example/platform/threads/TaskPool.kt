@@ -1,11 +1,17 @@
 package example.platform.threads
 
-import kotlin.native.concurrent.Future
-import kotlin.native.concurrent.TransferMode
-import kotlin.native.concurrent.Worker
+import kotlin.native.concurrent.*
 import kotlin.random.Random
 
 actual typealias ResultFuture<T> = Future<T>
+
+internal actual class ResultHolder<T> actual constructor(value: T) {
+
+    private val ptr = DetachedObjectGraph { value }.asCPointer()
+
+    actual inline fun <reified T> getValue(): T = DetachedObjectGraph<T>(ptr).attach()
+
+}
 
 actual class TaskPool actual constructor(workerCount: Int) {
 

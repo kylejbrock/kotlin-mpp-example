@@ -6,6 +6,15 @@ import java.util.concurrent.Future
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
+internal actual class ResultHolder<T> actual constructor(private val value: T) {
+
+    actual inline fun <reified T> getValue(): T {
+        val v = value
+        return v as T
+    }
+
+}
+
 actual class ResultFuture<T>(val future: Future<T>) {
 
     actual inline fun <R> consume(code: (T) -> R): R {

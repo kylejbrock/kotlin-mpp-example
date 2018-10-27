@@ -24,10 +24,6 @@ class Result<T>(private val future: ResultFuture<Pair<T?, Throwable?>>) {
     private val _callbacks = ThreadSafeList<Callback<T>>()
     private val _lock = Lock()
 
-    init {
-        ensureNeverFrozen()
-    }
-
     val value: T?
         get() = _result.value
 

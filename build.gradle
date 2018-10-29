@@ -14,7 +14,11 @@ apply plugin: 'maven-publish'
 kotlin {
     targets {
         fromPreset(presets.jvm, 'jvm')
-        fromPreset(presets.linuxX64, 'linux')
+        fromPreset(presets.linuxX64, 'linux') {
+            compilations.main.cinterops {
+                global
+            }
+        }
         fromPreset(presets.macosX64, 'mac') {
             compilations.main.cinterops {
                 global

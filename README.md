@@ -1,3 +1,3 @@
 Example of a Shared LRU Cache
 
-Presently, this incomplete.
+Presently, this is incomplete.

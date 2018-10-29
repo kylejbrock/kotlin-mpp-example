@@ -25,11 +25,12 @@ actual class ResultFuture<T>(val future: Future<T>) {
 
 actual class TaskPool actual constructor(workerCount: Int) {
 
-    private val workers = Executors.newFixedThreadPool(workerCount)
+    val workers = Executors.newFixedThreadPool(workerCount)
 
-    private val random = Random(4).apply { ensureNeverFrozen() }
+    val random = Random(4).apply { ensureNeverFrozen() }
 
     actual fun <T> execute(task: Task<T>): Result<T> {
+        task.prepare()
         val future = workers.submit(Callable<Pair<T?, Throwable?>> {
             try {
                 val result = task.execute()

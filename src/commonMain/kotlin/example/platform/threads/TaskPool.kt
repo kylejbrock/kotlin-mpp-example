@@ -1,8 +1,12 @@
 package example.platform.threads
 
-interface Task<T> {
+abstract class Task<T> {
 
-    fun execute(): T
+    fun prepare() {
+        freeze()
+    }
+
+    abstract fun execute(): T
 
 }
 

@@ -1,5 +1,10 @@
 package example.platform.threads
 
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
+import platform.posix.gettimeofday
+import platform.posix.timeval
 import kotlin.native.concurrent.*
 import kotlin.random.Random
 
@@ -13,32 +18,46 @@ internal actual class ResultHolder<T> actual constructor(value: T) {
 
 }
 
+private fun seed(): Int {
+    memScoped {
+        val t: timeval = alloc()
+        gettimeofday(t.ptr, null)
+        return t.tv_sec.toInt()
+    }
+}
+
 actual class TaskPool actual constructor(workerCount: Int) {
 
     @SharedImmutable
     private val workers = Array(workerCount) { Worker.start() }
 
     @ThreadLocal
-    private val random = Random(4).apply { ensureNeverFrozen() }
+    private val random = Random(seed()).apply { ensureNeverFrozen() }
 
-    actual fun <T> execute(task: Task<T>): Result<T> {
-        task.freeze() // FAIL: Core Dump unless this is commented out.  But, if you comment it out, it fails because of Immutability.  Confused at how to accomplish this.
+    @SharedImmutable
+    private val mutex = Lock()
+
+    actual fun <T> execute(task: Task<T>): Result<T> = mutex.sync {
+        if (mutex.disposed)
+            throw IllegalStateException("TaskPool is already shutdown")
         val workerIndex = random.nextInt(0, workers.size)
         val worker = workers[workerIndex]
+        task.prepare()
         val future = worker.execute(TransferMode.SAFE, { task }, {
             try {
                 val result = it.execute()
                 Pair(result, null)
             } catch (e: Throwable) {
+                e.printStackTrace()
                 Pair(null, e)
             }
         })
-        return Result(future)
+        Result(future)
     }
 
-    actual fun shutdownAndWait() {
+    actual fun shutdownAndWait() = mutex.syncAndDispose {
         workers.forEach {
-            it.requestTermination(true)
+            it.requestTermination(true).result
         }
     }
 

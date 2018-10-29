@@ -31,8 +31,10 @@ private class LruCacheMap<T>(private val maxItems: Int) : ThreadSafeMap<String, 
     override fun onWillSet(
         backingMap: MutableMap<String, SharedCacheItem<T>>,
         key: String,
-        value: SharedCacheItem<T>
+        value: SharedCacheItem<T>?
     ): SharedCacheItem<T>? {
+        if (value == null)
+            return null
         if (backingMap.size + 1 > maxItems) {
             evictLastAccessedItem(backingMap)
         }

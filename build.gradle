@@ -14,10 +14,12 @@ apply plugin: 'maven-publish'
 kotlin {
     targets {
         fromPreset(presets.jvm, 'jvm')
-        // For ARM, preset should be changed to presets.iosArm32 or presets.iosArm64
-        // For Linux, preset should be changed to e.g. presets.linuxX64
-        // For MacOS, preset should be changed to e.g. presets.macosX64
         fromPreset(presets.linuxX64, 'linux')
+        fromPreset(presets.macosX64, 'mac') {
+            compilations.main.cinterops {
+                global
+            }
+        }
     }
     sourceSets {
         commonMain {
@@ -42,9 +44,19 @@ kotlin {
                 implementation 'org.jetbrains.kotlin:kotlin-test-junit'
             }
         }
-        linuxMain {
+
+        macMain.kotlin.srcDirs += "$rootProject.projectDir/src/posixMain/kotlin"
+        macTest {
+            kotlin.srcDirs += "$rootProject.projectDir/src/posixTest/kotlin"
+            dependencies {
+                implementation 'org.jetbrains.kotlin:kotlin-test'
+                implementation 'org.jetbrains.kotlin:kotlin-test-junit'
+            }
         }
+
+        linuxMain.kotlin.srcDirs += "$rootProject.projectDir/src/posixMain/kotlin"
         linuxTest {
+            kotlin.srcDirs += "$rootProject.projectDir/src/posixTest/kotlin"
             dependencies {
                 implementation 'org.jetbrains.kotlin:kotlin-test'
                 implementation 'org.jetbrains.kotlin:kotlin-test-junit'

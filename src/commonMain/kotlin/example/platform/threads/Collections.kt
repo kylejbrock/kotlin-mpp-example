@@ -24,7 +24,7 @@ expect open class ThreadSafeMap<K, V>() {
 
     operator fun set(key: K, value: V)
 
-    protected open fun onWillSet(backingMap: MutableMap<K, V>, key: K, value: V): V?
+    protected open fun onWillSet(backingMap: MutableMap<K, V>, key: K, value: V?): V?
 
     operator fun get(key: K): V?
 
